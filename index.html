@@ -2124,8 +2124,14 @@ async function initNotifications(){
   try{
     const reg=await navigator.serviceWorker.register('/sw.js',{scope:'/'});
     await navigator.serviceWorker.ready;
+    // Send reminders to SW
     reg.active?.postMessage({type:'UPDATE_REMINDERS',reminders:state.reminders.filter(r=>r.enabled)});
-    console.log('SW registered');
+    // Ping SW every minute to check reminders (keeps it alive)
+    setInterval(()=>{
+      fetch('/rada-tick?t='+Date.now()).catch(()=>{});
+      reg.active?.postMessage({type:'UPDATE_REMINDERS',reminders:state.reminders.filter(r=>r.enabled)});
+    }, 60000);
+    console.log('SW registered and tick started');
   }catch(e){console.log('SW failed:',e);}
 }
 
